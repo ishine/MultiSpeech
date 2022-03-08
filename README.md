@@ -1,5 +1,5 @@
 # MultiSpeech
 
-Unofficial pytorch Multispeech implementation.
+Unofficial Multispeech implementation using pytorch.
 
 but, i didn't implemnet Diagonal constraint for now.
