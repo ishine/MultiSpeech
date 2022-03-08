@@ -28,8 +28,6 @@ class Text_Encoder(nn.Module):
     def forward(self, x, pos, mask):
         
         x = self.text_norm(self.text_emb(x))
-
-        # Get positional embedding, apply alpha and add
         pos = self.pos_emb(pos)
         x = pos + x
 
@@ -81,7 +79,6 @@ class Mel_Decoder(nn.Module):
     def forward(self, x, pos, encoder_output, enc_dec_mask, dec_mask, dec_attn_mask):
 
         x = self.decoder_prenet(x)
-        # Get positional embedding, apply alpha and add
         pos = self.pos_emb(pos)
         x = pos + x
         # Positional dropout
@@ -146,7 +143,6 @@ class Multispeech(nn.Module):
         with torch.no_grad():
             src_mask = pos_src.lt(1)
             trg_mask = pos_trg.lt(1)
-            # triu_mask = torch.triu(torch.ones(trg.size(1), trg.size(1)), diagonal=1).bool().cuda()
             triu_mask = torch.triu(torch.ones(trg.size(1), trg.size(1)), diagonal=1).bool()
             triu_mask = triu_mask.type_as(pos_src).bool()
         return src_mask, trg_mask, triu_mask
