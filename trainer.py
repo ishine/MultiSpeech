@@ -11,14 +11,16 @@ def main():
     pl.seed_everything(42)
     gpus = torch.cuda.device_count()
     
-    out_path = './experiments/using_phonemes'
+    out_path = './experiments/using_phonemes_modify_detach'
     data_config = DataConfig(
         root_dir="/data1/spow12/datas/TTS/LJSpeech-1.1/",
         train_csv='metadata_train.csv',
         val_csv='metadata_val.csv'
     )
     train_config = TrainConfig(
-        batch_size=64,
+        batch_size=96,
+        training_step=16000,
+        warmup_step=16000*0.1,
         checkpoint_path= os.path.join(out_path, 'checkpoint'),
         log_dir= os.path.join(out_path, 'tensorboard')
     )
@@ -36,7 +38,7 @@ def main():
 
     trainer = pl.Trainer(
         gpus=gpus,
-        accelerator="ddp",
+        strategy="ddp",
         max_steps=train_config.training_step,
         checkpoint_callback=True,
         callbacks=[checkpoint_callback],
@@ -44,7 +46,7 @@ def main():
         amp_backend="native",
         profiler="simple",
         gradient_clip_val=1,
-        logger=logger
+        logger=logger,
         # auto_scale_batch_size=True
     )
 

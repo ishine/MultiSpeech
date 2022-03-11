@@ -3,6 +3,7 @@ import torch
 from torch import nn
 import pytorch_lightning as pl
 import transformers
+# from models.parallel import DataParallelCriterion
 
 class PL_model(pl.LightningModule):
     def __init__(self, train_config, data_config, gpu_num):
@@ -13,16 +14,21 @@ class PL_model(pl.LightningModule):
         self.data_config = data_config
         self.gpu_num = gpu_num
         
+        # Define Loss
+        self.l1_loss = nn.L1Loss()
+        self.bce_loss = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(train_config.bce_weight))
+        
+        
     def forward(self, data):
         return self.model(**data)
 
     def training_step(self, batch, batch_idx):
         data, labels = batch
         pred, _ = self.forward(data)
-        mel_loss, bce_loss = trasnformer_loss(**labels, **pred)
+        mel_loss, bce_loss = self.trasnformer_loss(**labels, **pred)
         train_loss = mel_loss + bce_loss
-        
-        self.log("train_loss", train_loss, on_epoch=True)
+
+        self.log("train_loss",  train_loss, on_epoch=True)
         self.log("mel_loss", mel_loss, on_epoch=True)
         self.log("bce_loss", bce_loss, on_epoch=True)
         return train_loss
@@ -30,7 +36,7 @@ class PL_model(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         data, labels = batch
         pred, _ = self.forward(data)
-        mel_loss, bce_loss = trasnformer_loss(**labels, **pred)
+        mel_loss, bce_loss = self.trasnformer_loss(**labels, **pred)
         val_loss = mel_loss + bce_loss
         self.log("val_loss", val_loss, on_epoch=True)
         self.log("mel_loss", mel_loss, on_epoch=True)
@@ -46,10 +52,9 @@ class PL_model(pl.LightningModule):
         )
         return [optimizer], [scheduler]
     
-    
-def trasnformer_loss(mel, stop_tokens, pred_mel, pred_stop_tokens, bce_weight=8):
+    def trasnformer_loss(self, mel, stop_tokens, pred_mel, pred_stop_tokens):
+        mel_loss = self.l1_loss(pred_mel, mel)
+        bce_loss = self.bce_loss(pred_stop_tokens.squeeze(), stop_tokens)
+        return mel_loss, bce_loss
 
-    mel_loss = nn.L1Loss()(pred_mel, mel)
-    bce_loss = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bce_weight))(pred_stop_tokens.squeeze(), stop_tokens)
-
-    return mel_loss, bce_loss
+                                         

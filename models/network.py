@@ -37,7 +37,7 @@ class Text_Encoder(nn.Module):
         attn_list = []
         for block in self.blocks:
             x, attn = block(x, mask=mask)
-            attn_list.append(attn.detach())
+            attn_list.append(attn.clone().detach().requires_grad_(False))
         return x, attn_list
     
 
@@ -72,7 +72,7 @@ class Mel_Decoder(nn.Module):
         self.mel_linear = Linear(train_config.hidden_size, n_mels)
         self.stop_linear = nn.Sequential(
             Linear(train_config.hidden_size, 1),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
         # self.postconvnet = PostConvNet(train_config.hidden_size, n_mels, n_mels)
 
@@ -89,8 +89,8 @@ class Mel_Decoder(nn.Module):
         for block in self.dec_blocks:
             x, mask_attn, enc_dec_attn = block(x, encoder_output, 
                                                     enc_dec_mask, dec_mask, dec_attn_mask)
-            mask_attn_list.append(mask_attn.detach())
-            enc_dec_attn_list.append(enc_dec_attn.detach())
+            mask_attn_list.append(mask_attn.clone().detach().requires_grad_(False))
+            enc_dec_attn_list.append(enc_dec_attn.clone().detach().requires_grad_(False))
         # Linear Project
         mel_out = self.mel_linear(x)
         # Stop token Prediction
