@@ -25,7 +25,7 @@ class DataConfig():
     # previous setting(using text)
     # cleaners: str = 'english_cleaners'
     # symbol_length: int = 149
-    # After Setting(using phoneme)
+    # Modeified Setting(using phoneme)
     cleaners: str = "phoneme_cleaners"
     use_phonemes: bool =True
     language: str ="en-us"
